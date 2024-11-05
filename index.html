@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Finder</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* Custom styles */
+        .recipe-card {
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .recipe-img {
+            max-height: 200px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body class="container mt-5">
+
+    <h2>Recipe Finder</h2>
+
+    <!-- Recipe Form -->
+    <form id="recipeForm" enctype="multipart/form-data" class="mb-4">
+        <div class="form-group">
+            <input type="text" name="title" class="form-control" placeholder="Recipe Title" required>
+        </div>
+        <div class="form-group">
+            <textarea name="ingredients" class="form-control" placeholder="Ingredients (comma-separated)" required></textarea>
+        </div>
+        <div class="form-group">
+            <textarea name="instructions" class="form-control" placeholder="Instructions" required></textarea>
+        </div>
+        <div class="form-group">
+            <input type="file" name="image" class="form-control-file" accept="image/*" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Recipe</button>
+    </form>
+
+    <!-- Search Form -->
+    <div class="form-group">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search by ingredient...">
+    </div>
+
+    <!-- Recipe List -->
+    <div id="recipeList"></div>
+
+    <script>
+        // Handle form submission
+        document.getElementById('recipeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(document.getElementById('recipeForm'));
+
+            const response = await fetch('add_recipe.php', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            alert(result.message || 'Error');
+            loadRecipes();
+        });
+
+        // Load recipes based on search term
+        document.getElementById('searchInput').addEventListener('input', loadRecipes);
+
+        async function loadRecipes() {
+            const searchTerm = document.getElementById('searchInput').value;
+            const response = await fetch(`search_recipes.php?ingredient=${searchTerm}`);
+            const recipes = await response.json();
+
+            const recipeList = document.getElementById('recipeList');
+            recipeList.innerHTML = '';
+
+            recipes.forEach(recipe => {
+                const recipeCard = document.createElement('div');
+                recipeCard.className = 'recipe-card';
+
+                recipeCard.innerHTML = `
+                    <h4>${recipe.title}</h4>
+                    <img src="${recipe.image_path}" class="recipe-img" alt="${recipe.title}">
+                    <p><strong>Ingredients:</strong> ${recipe.ingredients}</p>
+                    <p><strong>Instructions:</strong> ${recipe.instructions}</p>
+                `;
+                recipeList.appendChild(recipeCard);
+            });
+        }
+
+        // Initial load
+        loadRecipes();
+    </script>
+
+</body>
+</html>
